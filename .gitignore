@@ -1,0 +1,12 @@
+node_modules/
+dist/
+data/
+.env
+*.log
+*.bak
+.claude/
+
+# Only the bundled example characters are published.
+characters/*
+!characters/aria.yaml
+!characters/tagsmith.yaml

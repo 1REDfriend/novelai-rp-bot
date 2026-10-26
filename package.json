@@ -1,0 +1,51 @@
+{
+  "name": "novelai-rp-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Discord AI roleplay bot powered by NovelAI: character chat with lorebooks, a character builder, and free V5 anime image generation",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "1REDfriend",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1REDfriend/novelai-rp-bot.git"
+  },
+  "homepage": "https://github.com/1REDfriend/novelai-rp-bot#readme",
+  "keywords": [
+    "discord-bot",
+    "ai-roleplay",
+    "roleplay-bot",
+    "novelai",
+    "character-ai",
+    "ai-chatbot",
+    "ai-companion",
+    "glm-4",
+    "lorebook",
+    "image-generation",
+    "novelai-diffusion",
+    "discord.js"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "check-api": "tsx scripts/check-api.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.9",
+    "fflate": "^0.8.3",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
