@@ -63,7 +63,7 @@ export function loadConfig(): Config {
     chatMaxOutputTokens: number('CHAT_MAX_OUTPUT_TOKENS', 1500),
     builderMaxOutputTokens: number('BUILDER_MAX_OUTPUT_TOKENS', 3000),
     builderMaxContextTokens: number('BUILDER_MAX_CONTEXT_TOKENS', 16000),
-    maxOutputTokens: number('MAX_OUTPUT_TOKENS', 300),
+    maxOutputTokens: number('MAX_OUTPUT_TOKENS', 500),
     maxContextTokens: number('MAX_CONTEXT_TOKENS', 8000),
     temperature: number('TEMPERATURE', 0.7),
     topP: number('TOP_P', 0.95),

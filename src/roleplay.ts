@@ -78,6 +78,9 @@ export interface SavedCharacter {
   backupPath: string | null;
 }
 
+/** Extra tokens a roleplay reply cut by the output limit gets to finish its sentence. */
+const FINISH_TOKENS = 120;
+
 /** Chat logic independent of Discord: binding, history edits and reply generation. */
 export class RoleplayService {
   constructor(
@@ -416,9 +419,15 @@ export class RoleplayService {
 
     // One retry when the model only produced lines for the user.
     for (let attempt = 0; attempt < 2; attempt++) {
-      const result = await this.text.complete(request);
-      let text = cleanReply(result.text, character.name, userNames);
-      if (result.finishReason === 'length') text = trimIncomplete(text);
+      let { text: raw, finishReason } = await this.text.complete(request);
+      if (finishReason === 'length') {
+        // A reply cut mid-thought gets a short extra budget to finish its sentence.
+        const more = await this.text.complete({ ...request, prompt: request.prompt + raw, maxTokens: FINISH_TOKENS });
+        raw += more.text;
+        finishReason = more.finishReason;
+      }
+      let text = cleanReply(raw, character.name, userNames);
+      if (finishReason === 'length') text = trimIncomplete(text);
       if (text) {
         const messageId = this.store.addMessage(channelId, { role: 'character', author: character.name, content: text });
         return { character, text, messageId };

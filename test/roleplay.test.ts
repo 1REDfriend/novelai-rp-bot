@@ -11,9 +11,12 @@ class FakeText {
   requests: CompletionRequest[] = [];
   outputs: string[] = [];
   finishReason: string | null = 'stop';
+  /** Per-call finish reasons, used before falling back to finishReason. */
+  finishReasons: (string | null)[] = [];
   async complete(request: CompletionRequest): Promise<CompletionResult> {
     this.requests.push(request);
-    return { text: this.outputs.shift() ?? ' Default reply.', finishReason: this.finishReason };
+    const finishReason = this.finishReasons.length ? this.finishReasons.shift()! : this.finishReason;
+    return { text: this.outputs.shift() ?? ' Default reply.', finishReason };
   }
 }
 
@@ -112,12 +115,22 @@ describe('RoleplayService', () => {
     expect(text.requests[1]!.prompt).toContain('never speaks for the traveler');
   });
 
-  it('trims a reply cut off by the token limit back to the last complete sentence', async () => {
+  it('lets a reply cut off by the token limit finish its sentence', async () => {
+    service.start('c1', 'aria');
+    text.finishReasons.push('length', 'stop');
+    text.outputs.push(' *She smiles.* That is Mochi!\n\n*She reaches for the sh', 'elf.* Want a treat?');
+    const reply = await service.reply('c1', 'Rowan', 'who is the cat?');
+    expect(reply.text).toBe('*She smiles.* That is Mochi!\n\n*She reaches for the shelf.* Want a treat?');
+    expect(text.requests[1]!.prompt.endsWith('*She reaches for the sh')).toBe(true);
+    expect(text.requests[1]!.maxTokens).toBe(120);
+  });
+
+  it('trims back to the last complete sentence when the extra budget runs out too', async () => {
     service.start('c1', 'aria');
     text.finishReason = 'length';
-    text.outputs.push(' *She smiles.* That is Mochi!\n\n*She reaches for the sh');
+    text.outputs.push(' *She smiles.* That is Mochi!', ' He loves fish. *She reaches for the sh');
     const reply = await service.reply('c1', 'Rowan', 'who is the cat?');
-    expect(reply.text).toBe('*She smiles.* That is Mochi!');
+    expect(reply.text).toBe('*She smiles.* That is Mochi! He loves fish.');
   });
 
   it('retries once when the cleaned reply is empty, then gives up', async () => {

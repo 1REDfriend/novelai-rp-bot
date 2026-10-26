@@ -46,7 +46,7 @@ describe('loadConfig', () => {
       chatMaxOutputTokens: 1500,
       builderMaxOutputTokens: 3000,
       builderMaxContextTokens: 16000,
-      maxOutputTokens: 300,
+      maxOutputTokens: 500,
       maxContextTokens: 8000,
       temperature: 0.7,
       topP: 0.95,

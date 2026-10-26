@@ -172,7 +172,7 @@ All settings live in `.env`.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `MAX_OUTPUT_TOKENS` | 300 | Max reply length. Thai uses roughly one token per character. A reply cut off by the limit is trimmed back to its last complete sentence |
+| `MAX_OUTPUT_TOKENS` | 500 | Max reply length. Thai uses roughly one token per character. A reply that hits the limit gets up to 120 more tokens to finish its sentence; if it still is not done, it is trimmed back to its last complete sentence |
 | `MAX_CONTEXT_TOKENS` | 8000 | Total context size. The oldest history is dropped first; memory, lorebook and Author's Note are never dropped |
 | `TEMPERATURE` / `TOP_P` | 0.7 / 0.95 | How varied the replies are |
 | `LOREBOOK_SCAN_DEPTH` | 4 | How many recent messages are scanned for lorebook keys |
