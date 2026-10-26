@@ -38,6 +38,16 @@ describe('builder helpers', () => {
     expect(builderSystemPrompt({ id: 'aria', source: 'name: Aria' })).toContain('EDITING the existing file aria.yaml');
     expect(builderSystemPrompt(null)).toContain('creating a NEW character');
   });
+
+  it('asks for one concrete starting place with scene tags', () => {
+    expect(builderSystemPrompt(null)).toContain('ONE concrete place');
+    expect(builderSystemPrompt(null)).toContain('Scene tags (<place>)');
+  });
+
+  it('fixes one self-pronoun in memory and authors_note', () => {
+    expect(builderSystemPrompt(null)).toContain('Pronouns:');
+    expect(builderSystemPrompt(null)).toContain('repeat them in authors_note');
+  });
 });
 
 describe('splitForDiscord with code blocks', () => {

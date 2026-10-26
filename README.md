@@ -108,6 +108,7 @@ Good to know:
 - Before overwriting, the old file is kept as `<name>.yaml.bak` in the `characters` folder. Rename it back to undo.
 - After `/save`, the channel keeps editing that file. Keep chatting and `/save` again.
 - Memory and lorebook are written in English because GLM follows English notes better; the greeting uses your story's language.
+- For Thai characters, the builder fixes one self-pronoun that fits the character (e.g. ข้า, หนู, ดิฉัน or her own name for a woman; ผม or ข้า for a man) and how they address you, and writes it into both memory and the Author's Note. It avoids ฉัน, since that is usually what you call yourself. Ask for a different pronoun any time.
 - Want to see the character? `/image` draws them standing alone on a plain background from the `Image tags` in the latest draft, no `/save` needed. Change the tags and draw again; the channel keeps one seed so you can see exactly what the tags changed.
 
 ## Prompt helper: `tagsmith`
@@ -159,6 +160,7 @@ Fields:
   - `text`: the content to insert
   - `always_on`: `true` to include it every time
   - a character entry should include an `Image tags (<name>): ...` line of English Danbooru tags for pictures
+  - a place entry can include a `Scene tags (<place>): ...` line of background tags (no people, time or weather), so `/image` draws that place the same way every time. Make the starting place `always_on: true`
 - `authors_note`: a short instruction inserted near the end of the context to control the reply style (in double quotes)
 - `greeting`: the opening message
 

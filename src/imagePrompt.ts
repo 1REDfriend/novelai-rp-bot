@@ -9,6 +9,7 @@ Main: <character count e.g. 1girl, 1boy>, <composition>, <camera angle and frami
 Character 1 (<name>): <expression>, <eye direction>, <pose>, <hand action>, <held item>, <position in frame>, <clothing or hair changes>
 Character 2 (<name>): <same structure>
 [/Image Prompt]
+Location: the place where the current moment happens, as the story last described it. If that place has a "Scene tags (<place>): ..." line, copy those tags into Main as the location and background objects, then add only what the scene changes.
 Rules: tags only, comma separated, English, no sentences. Main must not describe any character's appearance. Each character line describes only that one character. Only include characters who are present in the current moment. Use each character's exact name.
 Appearance: a character's Image tags are added automatically, so do not repeat their hair, eyes, body or usual clothes. Write <clothing or hair changes> only if the story explicitly changed them (took off a coat, changed clothes, got wet); otherwise leave it out. For a character with no Image tags, start their line with gender and basic appearance tags.`;
 
