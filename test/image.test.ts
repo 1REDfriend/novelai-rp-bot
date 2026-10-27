@@ -214,3 +214,19 @@ describe('parseImagePrompt: real outputs that used to fail', () => {
     ]);
   });
 });
+
+describe('parseImagePrompt: characters named in Thai', () => {
+  it('replaces Thai names inside tags instead of rejecting the prompt', () => {
+    const parsed = parseImagePrompt(
+      " 1girl, 1boy, forest\nCharacter 1 (ดาวเรือง): smile, looking at user\nCharacter 2 (User): looking at ดาวเรือง, holding ดาวเรือง's hand",
+    );
+    expect(parsed?.characters).toEqual([
+      { name: 'ดาวเรือง', tags: 'smile, looking at user' },
+      { name: 'User', tags: "looking at the other person, holding the other person's hand" },
+    ]);
+  });
+
+  it('still rejects Thai text that is not a character name', () => {
+    expect(parseImagePrompt(' 1girl, forest\nCharacter 1 (ดาวเรือง): ยิ้ม, smile')).toBeNull();
+  });
+});

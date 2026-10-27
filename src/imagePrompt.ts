@@ -79,11 +79,29 @@ export function parseImagePrompt(continuation: string): ImagePrompt | null {
   }
 
   if (!main || characters.length > MAX_CHARACTERS) return null;
+  replaceForeignNames(characters);
   const allTags = [main, ...characters.map((c) => c.tags)].join(', ').split(', ');
   if (allTags.some(looksLikeProse)) return null;
   // A Main that is one long comma-free phrase is a sentence, not a tag list.
   if (!main.includes(',') && main.split(/\s+/).length > 6) return null;
   return { main, characters };
+}
+
+/**
+ * A character named in Thai (or any non-Latin script) shows up inside the other
+ * lines' tags ("looking at <name>"), which would fail the prose check. V5 never
+ * sees the names anyway, so swap them for a plain English word.
+ */
+function replaceForeignNames(characters: ImagePrompt['characters']): void {
+  const names = characters.map((c) => c.name).filter((n) => /[^\x00-\x7F]/.test(n));
+  if (names.length === 0) return;
+  // Longest first, so a name that contains another is replaced whole.
+  const pattern = new RegExp(names.sort((a, b) => b.length - a.length).map(escapeRegExp).join('|'), 'g');
+  for (const c of characters) c.tags = c.tags.replace(pattern, 'the other person');
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
