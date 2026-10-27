@@ -21,7 +21,14 @@ import type { Config } from './config.js';
 import { buildPrompt } from './context.js';
 import type { HistoryStore, StoredMessage } from './history.js';
 import type { ImagePrompt } from './image.js';
-import { applyImageTags, IMAGE_PROMPT_PREFILL, IMAGE_PROMPT_RULES, IMAGE_PROMPT_STOP, parseImagePrompt } from './imagePrompt.js';
+import {
+  applyImageTags,
+  IMAGE_PROMPT_PREFILL,
+  IMAGE_PROMPT_RULES,
+  IMAGE_PROMPT_STOP,
+  imageRequestLine,
+  parseImagePrompt,
+} from './imagePrompt.js';
 import { NovelAIError, type NovelAITextClient } from './novelai.js';
 import { cleanReply, dropRepeatedPieces, stopSequences, trimIncomplete } from './reply.js';
 
@@ -321,8 +328,10 @@ export class RoleplayService {
    * context plus the image-prompt rules; nothing is written to the history.
    * Retries once when the output cannot be parsed. Each character's lorebook
    * Image tags are then locked in, so their look stays the same across images.
+   * `direction` is the user's own description of the picture for this one
+   * image; it goes right before the prefill and is not stored either.
    */
-  async writeImagePrompt(channelId: string): Promise<ImagePrompt> {
+  async writeImagePrompt(channelId: string, direction = '', requester = ''): Promise<ImagePrompt> {
     const character = this.boundCharacter(channelId);
     const history = this.store.getMessages(channelId);
     const maxTokens = 400;
@@ -335,7 +344,7 @@ export class RoleplayService {
       noteDepth: this.config.authorsNoteDepth,
       maxPromptTokens: this.config.maxContextTokens - maxTokens,
       extraEntries: [IMAGE_PROMPT_RULES],
-      prefill: IMAGE_PROMPT_PREFILL,
+      prefill: [imageRequestLine(direction, requester), IMAGE_PROMPT_PREFILL].filter(Boolean).join('\n'),
     });
     const attempts = 3;
     for (let attempt = 1; attempt <= attempts; attempt++) {

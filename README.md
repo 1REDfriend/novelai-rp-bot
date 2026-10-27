@@ -87,7 +87,7 @@ npm run dev
 | `/builder [character]` | Turn this channel into a character builder, for a new character or an existing one |
 | `/save [file] [overwrite]` | Save the latest character file the builder wrote |
 | `/characters` | List the available characters |
-| `/image [orientation] [new_seed]` | Draw the latest scene (in a builder channel: the character being built). Portrait by default; `new_seed: True` picks a new art style seed |
+| `/image [direction] [orientation] [new_seed]` | Draw the latest scene (in a builder channel: the character being built). `direction` says what the picture should show, in your own words. Portrait by default; `new_seed: True` picks a new art style seed |
 
 Characters see your server display name. When several people post at once, the bot answers one message at a time, in order.
 
@@ -130,6 +130,8 @@ In a roleplay channel, `/image` works in three steps:
 1. The text model reads the latest part of the story and writes the scene as English tags, split into the scene (`Main`) and each character. This description is not saved to the chat history, so characters never start imitating it.
 2. If the model gets the format wrong, it gets one retry; if it fails again, the bot says so in the chat.
 3. The picture is drawn with V5 Full and posted together with the prompt used, so you can take it into NovelAI and keep editing.
+
+Want a particular shot? Say it in `direction`, in Thai or English, e.g. `/image direction: Aria carries Rowan on her back, seen from behind, sunset`. The model follows your words first and fills in the rest (place, outfits, looks) from the story. The request applies to that one picture only and is not saved to the chat history. It is shown above the prompt in the reply.
 
 ### Keeping characters consistent
 

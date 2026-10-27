@@ -29,6 +29,7 @@ export const commandDefinitions = [
   new SlashCommandBuilder()
     .setName('image')
     .setDescription(messages.commands.image)
+    .addStringOption((o) => o.setName('direction').setDescription(messages.commands.imageDirection).setMaxLength(300))
     .addStringOption((o) =>
       o
         .setName('orientation')

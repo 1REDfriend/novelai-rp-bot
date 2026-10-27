@@ -5,6 +5,7 @@ import {
   Client,
   Events,
   GatewayIntentBits,
+  GuildMember,
   type Message,
   MessageFlags,
   REST,
@@ -176,10 +177,16 @@ async function onCommand(interaction: ChatInputCommandInteraction): Promise<void
       case 'image': {
         const orientation = (interaction.options.getString('orientation') ?? 'portrait') as ImageOrientation;
         const portrait = service.mode(channelId) === 'builder';
+        // The builder portrait comes straight from the draft's tags, so a request has nothing to steer there.
+        const direction = portrait ? '' : (interaction.options.getString('direction') ?? '').trim();
+        // Same name the chat history uses, so "me" or a nickname in the request maps to the right character line.
+        const requester = interaction.member instanceof GuildMember ? interaction.member.displayName : interaction.user.displayName;
         if (!portrait) await interaction.editReply(messages.imageWritingPrompt);
         const stopTyping = startTyping(channel);
         try {
-          const prompt = portrait ? service.builderPortrait(channelId) : await service.writeImagePrompt(channelId);
+          const prompt = portrait
+            ? service.builderPortrait(channelId)
+            : await service.writeImagePrompt(channelId, direction, requester);
           const promptText = formatImagePrompt(prompt);
           await interaction.editReply(messages.imageGenerating);
           const seed = service.imageSeed(channelId, interaction.options.getBoolean('new_seed') ?? false);
@@ -187,7 +194,11 @@ async function onCommand(interaction: ChatInputCommandInteraction): Promise<void
           stopTyping();
           const embed = new EmbedBuilder()
             .setTitle(messages.imageEmbedTitle)
-            .setDescription(`\`\`\`\n${promptText.slice(0, 3900)}\n\`\`\``)
+            .setDescription(
+              [direction && messages.imageRequest(direction), `\`\`\`\n${promptText.slice(0, 3600)}\n\`\`\``]
+                .filter(Boolean)
+                .join('\n'),
+            )
             .setImage('attachment://scene.png')
             .setFooter({ text: messages.imageFooter(image.seed, image.percentAfter) });
           await interaction.editReply({

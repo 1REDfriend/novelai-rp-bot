@@ -20,6 +20,7 @@ export const messages = {
     noteText: "New Author's Note. Leave empty to restore the character's default",
     characters: 'List available characters',
     image: 'Draw the current scene, or in /builder the character being made (NovelAI V5 Full)',
+    imageDirection: 'What the picture should show, in your own words (roleplay channels only)',
     imageOrientation: 'Image shape (default: portrait)',
     imageNewSeed: 'Pick a new random seed for this channel (changes the art style)',
   },
@@ -48,6 +49,7 @@ export const messages = {
   imageWritingPrompt: 'Writing the image prompt...',
   imageGenerating: 'Drawing the scene with V5 Full...',
   imageEmbedTitle: 'Image prompt',
+  imageRequest: (direction: string) => `**Request:** ${direction}`,
   imageFooter: (seed: number, percent: number | null) =>
     `nai-diffusion-5-full · seed ${seed}${percent === null ? '' : ` · V5 allowance ${percent}%`}`,
   imageAnlasWarning: (spent: number) =>
