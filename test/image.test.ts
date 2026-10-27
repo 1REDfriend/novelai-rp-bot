@@ -9,7 +9,7 @@ import {
   ImageQuotaError,
   NovelAIImageClient,
 } from '../src/image.js';
-import { applyImageTags, formatImagePrompt, parseImagePrompt } from '../src/imagePrompt.js';
+import { applyImageTags, fixReversedCarry, formatImagePrompt, parseImagePrompt } from '../src/imagePrompt.js';
 
 const prompt = {
   main: '1girl, 1boy, indoors, potion shop',
@@ -212,5 +212,35 @@ describe('parseImagePrompt: real outputs that used to fail', () => {
       { name: 'Aria', tags: 'smile' },
       { name: 'Mochi', tags: 'sleeping, curled up' },
     ]);
+  });
+});
+
+describe('fixReversedCarry', () => {
+  const prompt = (carrier: string, rider: string) => ({
+    main: '1girl, 1boy, piggyback',
+    characters: [
+      { name: 'Aria', tags: carrier },
+      { name: 'Rowan', tags: rider },
+    ],
+  });
+
+  it('swaps source/target when the carrier got target# and the rider got source#', () => {
+    const fixed = fixReversedCarry(
+      prompt('crawling, carrying someone on her back, target#piggyback', 'on back, arms around neck, source#piggyback, being carried'),
+    );
+    expect(fixed.characters[0]!.tags).toBe('crawling, carrying someone on her back, source#piggyback');
+    expect(fixed.characters[1]!.tags).toBe('on back, arms around neck, target#piggyback, being carried');
+  });
+
+  it('leaves correct or unclear tags alone', () => {
+    const right = prompt('carrying, source#piggyback', 'being carried, target#piggyback');
+    expect(fixReversedCarry(right)).toEqual(right);
+    const unclear = prompt('smiling, target#hug', 'source#hug');
+    expect(fixReversedCarry(unclear)).toEqual(unclear);
+  });
+
+  it('is applied when parsing', () => {
+    const parsed = parseImagePrompt(' 1girl, 1boy, piggyback\nCharacter 1 (Aria): carrying, target#piggyback\nCharacter 2 (Rowan): being carried, source#piggyback');
+    expect(parsed?.characters.map((c) => c.tags)).toEqual(['carrying, source#piggyback', 'being carried, target#piggyback']);
   });
 });

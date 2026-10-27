@@ -180,6 +180,7 @@ All settings live in `.env`.
 | `CHAT_MAX_OUTPUT_TOKENS` | 1500 | Max reply length in `/chat` channels |
 | `BUILDER_MAX_OUTPUT_TOKENS` | 3000 | Max reply length in `/builder` channels; must fit a full character file |
 | `BUILDER_MAX_CONTEXT_TOKENS` | 16000 | Context size in `/builder` channels (the edited file plus the conversation) |
+| `STORY_DIRECTIVE` | built-in rules | Story rules added after every roleplay Author's Note, for all characters: characters take initiative, carry through what you start, and do not repeat lines. `{{char}}` becomes the character's name. Set `off` to turn it off |
 | `NOVELAI_CHAT_URL` | `https://text.novelai.net/oa/v1/chat/completions` | Endpoint for `/chat` and `/builder`; normally left alone |
 | `DATABASE_PATH` | `data/bot.db` | Where chat history is stored |
 

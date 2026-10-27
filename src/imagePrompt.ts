@@ -10,6 +10,7 @@ Character 1 (<name>): <expression>, <eye direction>, <pose>, <hand action>, <hel
 Character 2 (<name>): <same structure>
 [/Image Prompt]
 Location: the place where the current moment happens, as the story last described it. If that place has a "Scene tags (<place>): ..." line, copy those tags into Main as the location and background objects, then add only what the scene changes.
+Interactions: when characters do something to each other, name the action in Main (e.g. piggyback, hug, holding hands) and mark who does what: put "source#<action>" in the line of the one doing it and "target#<action>" in the line of the one it is done to (piggyback: the carrier gets source#piggyback, the rider gets target#piggyback). Use "mutual#<action>" in both lines when they do it together (mutual#hug). Add the body position that follows (carrying, on back, arms around neck). Check before writing: the line that says carrying gets source#piggyback, the line that says being carried gets target#piggyback.
 Rules: tags only, comma separated, English, no sentences. Main must not describe any character's appearance. Each character line describes only that one character. Only include characters who are present in the current moment. Use each character's exact name.
 Appearance: a character's Image tags are added automatically, so do not repeat their hair, eyes, body or usual clothes. Write <clothing or hair changes> only if the story explicitly changed them (took off a coat, changed clothes, got wet); otherwise leave it out. For a character with no Image tags, start their line with gender and basic appearance tags.`;
 
@@ -67,7 +68,32 @@ export function parseImagePrompt(continuation: string): ImagePrompt | null {
   if (allTags.some(looksLikeProse)) return null;
   // A Main that is one long comma-free phrase is a sentence, not a tag list.
   if (!main.includes(',') && main.split(/\s+/).length > 6) return null;
-  return { main, characters };
+  return fixReversedCarry({ main, characters });
+}
+
+const CARRIER = /\b(?<!being )carr(?:ying|ies)\b/i;
+const CARRIED = /\b(?:being carried|on (?:\w+(?:'s)? )?back|riding|clinging)\b/i;
+
+/**
+ * The model sometimes writes "carrying" in one line but gives that line the
+ * target# tag and the carried character the source# tag. When both lines
+ * contradict their tag that way, swap the tags back.
+ */
+export function fixReversedCarry(prompt: ImagePrompt): ImagePrompt {
+  const characters = prompt.characters.map((c) => ({ ...c }));
+  for (const target of characters) {
+    for (const action of target.tags.match(/target#[\w-]+/gi) ?? []) {
+      const name = action.slice('target#'.length);
+      const source = characters.find((c) => c !== target && new RegExp(`source#${name}\\b`, 'i').test(c.tags));
+      if (!source) continue;
+      // "carrying someone on her back" is a carrier, so CARRIED only counts without CARRIER.
+      const reversed = CARRIER.test(target.tags) && CARRIED.test(source.tags) && !CARRIER.test(source.tags);
+      if (!reversed) continue;
+      target.tags = target.tags.replace(action, `source#${name}`);
+      source.tags = source.tags.replace(new RegExp(`source#${name}\\b`, 'i'), `target#${name}`);
+    }
+  }
+  return { main: prompt.main, characters };
 }
 
 /**

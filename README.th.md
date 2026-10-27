@@ -195,6 +195,7 @@ npm run dev
 | `CHAT_MAX_OUTPUT_TOKENS` | 1500 | ความยาวคำตอบสูงสุดในโหมด `/chat` |
 | `BUILDER_MAX_OUTPUT_TOKENS` | 3000 | ความยาวคำตอบสูงสุดในโหมด `/builder` ต้องพอให้ไฟล์ตัวละครเต็มไฟล์ |
 | `BUILDER_MAX_CONTEXT_TOKENS` | 16000 | ขนาด context ของโหมด `/builder` (รวมไฟล์ที่กำลังแก้และประวัติการคุย) |
+| `STORY_DIRECTIVE` | กฎในตัวบอท | กฎของเรื่องที่แทรกต่อท้าย Author's Note ทุกตัวละครในโหมดโรลเพลย์ ให้ตัวละครคิดเองและพาเรื่องเดินต่อ ทำสิ่งที่คุณเริ่มให้จบ และไม่พูดประโยคซ้ำ `{{char}}` จะถูกแทนด้วยชื่อตัวละคร ใส่ `off` เพื่อปิด |
 | `NOVELAI_CHAT_URL` | `https://text.novelai.net/oa/v1/chat/completions` | endpoint ของโหมด `/chat` และ `/builder` ปกติไม่ต้องแก้ |
 | `DATABASE_PATH` | `data/bot.db` | ที่เก็บประวัติแชท |
 

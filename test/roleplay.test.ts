@@ -30,6 +30,7 @@ const config = {
   chatMaxOutputTokens: 1500,
   builderMaxOutputTokens: 3000,
   builderMaxContextTokens: 16000,
+  storyDirective: '',
 };
 
 let store: HistoryStore;
@@ -194,5 +195,27 @@ describe('image tags and seed', () => {
     expect(service.imageSeed('c1')).toBe(fresh);
     service.start('c1', 'aria');
     expect(store.getImageSeed('c1')).toBeNull();
+  });
+});
+
+describe('story directive and repeats', () => {
+  it('adds the directive after the Author\'s Note, even with a /note override', async () => {
+    const directed = new RoleplayService({ ...config, storyDirective: '[ {{char}} leads the scene ]' }, store, text, () =>
+      loadCharacters(charactersDir),
+    );
+    directed.start('c1', 'aria');
+    directed.setNote('c1', '[ short replies ]');
+    await directed.reply('c1', 'Rowan', 'hi');
+    const prompt = text.requests[0]!.prompt;
+    expect(prompt).toContain('[ short replies ]\n[ Aria leads the scene ]');
+  });
+
+  it('drops a closing line the character already used, and retries when nothing is left', async () => {
+    service.start('c1', 'aria');
+    text.outputs.push(' Mochi is asleep. See you tomorrow, traveler!', ' Grab a seat. See you tomorrow, traveler!');
+    await service.reply('c1', 'Rowan', 'hi');
+    expect((await service.reply('c1', 'Rowan', 'hello')).text).toBe('Grab a seat.');
+    text.outputs.push(' See you tomorrow, traveler!', ' The kettle whistles.');
+    expect((await service.reply('c1', 'Rowan', 'again')).text).toBe('The kettle whistles.');
   });
 });

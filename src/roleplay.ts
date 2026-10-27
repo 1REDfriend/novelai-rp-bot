@@ -23,7 +23,7 @@ import type { HistoryStore, StoredMessage } from './history.js';
 import type { ImagePrompt } from './image.js';
 import { applyImageTags, IMAGE_PROMPT_PREFILL, IMAGE_PROMPT_RULES, IMAGE_PROMPT_STOP, parseImagePrompt } from './imagePrompt.js';
 import { NovelAIError, type NovelAITextClient } from './novelai.js';
-import { cleanReply, stopSequences, trimIncomplete } from './reply.js';
+import { cleanReply, dropRepeatedPieces, stopSequences, trimIncomplete } from './reply.js';
 
 export class RoleplayError extends Error {
   constructor(
@@ -67,6 +67,7 @@ export type ConfigSubset = Pick<
   | 'chatMaxOutputTokens'
   | 'builderMaxOutputTokens'
   | 'builderMaxContextTokens'
+  | 'storyDirective'
 >;
 
 export type ChannelMode = 'roleplay' | 'chat' | 'builder';
@@ -80,6 +81,14 @@ export interface SavedCharacter {
 
 /** Extra tokens a roleplay reply cut by the output limit gets to finish its sentence. */
 const FINISH_TOKENS = 120;
+
+/** How many earlier character replies a new reply may not repeat lines from. */
+const RECENT_REPLIES_CHECKED = 3;
+
+/** The story directive with "{{char}}" filled in; empty when turned off. */
+function storyDirective(template: string, characterName: string): string {
+  return template.replaceAll('{{char}}', characterName);
+}
 
 /** Chat logic independent of Discord: binding, history edits and reply generation. */
 export class RoleplayService {
@@ -403,11 +412,19 @@ export class RoleplayService {
     const { prompt } = buildPrompt({
       character,
       history,
-      authorsNote: binding.noteOverride ?? character.authorsNote,
+      // The story directive sits after the character's note, closest to the reply.
+      authorsNote: [binding.noteOverride ?? character.authorsNote, storyDirective(this.config.storyDirective, character.name)]
+        .filter((note) => note.trim())
+        .join('\n'),
       scanDepth: this.config.lorebookScanDepth,
       noteDepth: this.config.authorsNoteDepth,
       maxPromptTokens: this.config.maxContextTokens - this.config.maxOutputTokens,
     });
+
+    const recentReplies = history
+      .filter((m) => m.role === 'character')
+      .slice(-RECENT_REPLIES_CHECKED)
+      .map((m) => m.content);
 
     const request = {
       prompt,
@@ -428,6 +445,7 @@ export class RoleplayService {
       }
       let text = cleanReply(raw, character.name, userNames);
       if (finishReason === 'length') text = trimIncomplete(text);
+      text = dropRepeatedPieces(text, recentReplies);
       if (text) {
         const messageId = this.store.addMessage(channelId, { role: 'character', author: character.name, content: text });
         return { character, text, messageId };

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { envValue, loadConfig } from '../src/config.js';
+import { DEFAULT_STORY_DIRECTIVE, envValue, loadConfig } from '../src/config.js';
 
 const saved = { ...process.env };
 
@@ -46,6 +46,7 @@ describe('loadConfig', () => {
       chatMaxOutputTokens: 1500,
       builderMaxOutputTokens: 3000,
       builderMaxContextTokens: 16000,
+      storyDirective: DEFAULT_STORY_DIRECTIVE,
       maxOutputTokens: 500,
       maxContextTokens: 8000,
       temperature: 0.7,
@@ -60,5 +61,16 @@ describe('loadConfig', () => {
   it('still requires real tokens', () => {
     Object.assign(process.env, { DISCORD_TOKEN: 'your-discord_token', NOVELAI_TOKEN: 'pst-real' });
     expect(() => loadConfig()).toThrow(/DISCORD_TOKEN/);
+  });
+});
+
+describe('STORY_DIRECTIVE', () => {
+  it('can be turned off or replaced', () => {
+    process.env.DISCORD_TOKEN = 'd';
+    process.env.NOVELAI_TOKEN = 'n';
+    process.env.STORY_DIRECTIVE = 'off';
+    expect(loadConfig().storyDirective).toBe('');
+    process.env.STORY_DIRECTIVE = '[ {{char}} is bold ]';
+    expect(loadConfig().storyDirective).toBe('[ {{char}} is bold ]');
   });
 });

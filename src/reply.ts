@@ -52,7 +52,8 @@ export function trimIncomplete(text: string): string {
   const minKeep = Math.ceil(trimmed.length * 0.4);
   const boundaries = [
     trimmed.lastIndexOf('\n'),
-    ...['.', '!', '?', '…', '"', '”', ')', '~'].map((c) => {
+    lastFullStopEnd(trimmed),
+    ...['!', '?', '"', '”', ')', '~'].map((c) => {
       const i = trimmed.lastIndexOf(c);
       return i === -1 ? -1 : i + 1;
     }),
@@ -63,6 +64,17 @@ export function trimIncomplete(text: string): string {
   const space = trimmed.lastIndexOf(' ');
   if (space >= minKeep) return trimmed.slice(0, space).trimEnd();
   return trimmed;
+}
+
+/**
+ * End index of the last "." that ends a sentence, or -1. An ellipsis ("..." or
+ * "…") is a pause mid-sentence in Thai, so it does not count.
+ */
+function lastFullStopEnd(text: string): number {
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === '.' && text[i - 1] !== '.' && text[i + 1] !== '.') return i + 1;
+  }
+  return -1;
 }
 
 /** End index of the last "*action*" that is closed, or -1. */
@@ -121,4 +133,47 @@ function openFence(text: string): string | null {
     open = open === null ? line.trim() : null;
   }
   return open;
+}
+
+/** Letters and digits only, lowercased, so spacing and punctuation do not hide a repeat. */
+function normalizePiece(piece: string): string {
+  return piece.replace(/[\s*"“”'‘’!?….,~:;()-]/g, '').toLowerCase();
+}
+
+/**
+ * A line split into *actions* and sentences ending in . ! ? or …, with all text
+ * kept. Thai marks a sentence end with a space instead, so Thai text is also
+ * split at spaces.
+ */
+function linePieces(line: string): string[] {
+  return line
+    .split(/(\*[^*\n]+\*)/)
+    .flatMap((part) => (part.startsWith('*') ? [part] : (part.match(/[^.!?…]+[.!?…]*|[.!?…]+/g) ?? [])))
+    .flatMap((piece) => (!piece.startsWith('*') && /[฀-๿]/.test(piece) ? piece.split(/(?<= )/) : [piece]));
+}
+
+/**
+ * Removes actions and sentences that already appeared in recent replies, so the
+ * model cannot end every turn with the same line. Pieces shorter than
+ * `minLength` letters (e.g. "อุ๊ย!" or "ค่ะ") are always kept.
+ */
+export function dropRepeatedPieces(text: string, recentReplies: string[], minLength = 12): string {
+  const seen = new Set(
+    recentReplies
+      .flatMap((reply) => reply.split('\n').flatMap(linePieces))
+      .map(normalizePiece)
+      .filter((p) => p.length >= minLength),
+  );
+  if (seen.size === 0) return text;
+  return text
+    .split('\n')
+    .map((line) => {
+      if (!line.trim()) return line;
+      const kept = linePieces(line).filter((piece) => !seen.has(normalizePiece(piece)));
+      return kept.join('').replace(/ {2,}/g, ' ').trim() || null;
+    })
+    .filter((line): line is string => line !== null)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

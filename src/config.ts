@@ -10,6 +10,8 @@ export interface Config {
   chatMaxOutputTokens: number;
   builderMaxOutputTokens: number;
   builderMaxContextTokens: number;
+  /** Rules added next to every roleplay Author's Note; "{{char}}" is the character's name. Empty when off. */
+  storyDirective: string;
   maxOutputTokens: number;
   maxContextTokens: number;
   temperature: number;
@@ -42,6 +44,19 @@ function optional(name: string, fallback: string): string {
   return envValue(name) ?? fallback;
 }
 
+export const DEFAULT_STORY_DIRECTIVE =
+  "[ Story rules: {{char}} has a mind of their own: every reply adds at least one idea, decision or action of {{char}}'s own that moves the scene forward. " +
+  'When the user says they do something, write its obvious result and carry on (the user asks for a piggyback: {{char}} crouches, the user climbs on, and they set off); ' +
+  "do not stop to ask permission again. Never invent the user's words or new decisions. Never repeat earlier lines; end each reply differently. " +
+  'Keep bodies and positions physically believable and consistent with the last turn; when something goes wrong mid-action (slipping, tripping, dropping something), ' +
+  '{{char}} reacts the way a real person would (hitches them back up, holds on tighter, or sets them down safely). ]';
+
+/** STORY_DIRECTIVE: unset uses the default, "off" turns it off. */
+function storyDirectiveSetting(): string {
+  const value = optional('STORY_DIRECTIVE', DEFAULT_STORY_DIRECTIVE);
+  return value.toLowerCase() === 'off' ? '' : value;
+}
+
 function number(name: string, fallback: number): number {
   const raw = envValue(name);
   if (!raw) return fallback;
@@ -63,6 +78,7 @@ export function loadConfig(): Config {
     chatMaxOutputTokens: number('CHAT_MAX_OUTPUT_TOKENS', 1500),
     builderMaxOutputTokens: number('BUILDER_MAX_OUTPUT_TOKENS', 3000),
     builderMaxContextTokens: number('BUILDER_MAX_CONTEXT_TOKENS', 16000),
+    storyDirective: storyDirectiveSetting(),
     maxOutputTokens: number('MAX_OUTPUT_TOKENS', 500),
     maxContextTokens: number('MAX_CONTEXT_TOKENS', 8000),
     temperature: number('TEMPERATURE', 0.7),

@@ -75,6 +75,7 @@ describe('RoleplayService builder mode', () => {
     chatMaxOutputTokens: 1500,
     builderMaxOutputTokens: 3000,
     builderMaxContextTokens: 16000,
+    storyDirective: '',
   };
   const text = { complete: async (_r: CompletionRequest) => ({ text: 'unused', finishReason: 'stop' }) };
 

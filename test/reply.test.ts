@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanReply, splitForDiscord, stopSequences, trimIncomplete } from '../src/reply.js';
+import { cleanReply, dropRepeatedPieces, splitForDiscord, stopSequences, trimIncomplete } from '../src/reply.js';
 
 describe('stopSequences', () => {
   it('adds one line-start stop per user plus the image prompt terminator, within the limit', () => {
@@ -44,11 +44,35 @@ describe('trimIncomplete', () => {
     expect(trimIncomplete('*waves happily at you* Hello there my fri')).toBe('*waves happily at you*');
   });
 
+  it('does not stop at an ellipsis, which is a pause mid-sentence', () => {
+    expect(trimIncomplete('*เธอเดินต่อไปอย่างระมัดระวัง* อาเรียว่า... ถ้าเราไปทางท่าเรือ')).toBe('*เธอเดินต่อไปอย่างระมัดระวัง*');
+    expect(trimIncomplete('She nods and looks at the path ahead. Well… I think we sho')).toBe('She nods and looks at the path ahead.');
+  });
+
   it('falls back to the last space for Thai text without punctuation', () => {
     expect(trimIncomplete('นั่นคือโมจิค่ะ เจ้านายตัวจริงของร้าน แต่ต้องแอบบ')).toBe('นั่นคือโมจิค่ะ เจ้านายตัวจริงของร้าน');
   });
 
   it('leaves the text alone when trimming would drop most of it', () => {
     expect(trimIncomplete('Hi. Thisisonelongunbrokenwordthatgoesonandon')).toBe('Hi. Thisisonelongunbrokenwordthatgoesonandon');
+  });
+});
+
+describe('dropRepeatedPieces', () => {
+  const earlier = '*She waves.* ยินดีต้อนรับนะคะ\n*อาเรียยิ้มกว้างแล้วโบกมือให้อย่างร่าเริง* วันนี้อากาศดีจังเลยนะคะ!';
+
+  it('removes actions and sentences already used in recent replies', () => {
+    const reply = 'โมจิหลับอยู่บนเคาน์เตอร์ค่ะ\n*อาเรียยิ้มกว้างแล้วโบกมือให้อย่างร่าเริง* วันนี้อากาศดีจังเลยนะคะ!';
+    expect(dropRepeatedPieces(reply, [earlier])).toBe('โมจิหลับอยู่บนเคาน์เตอร์ค่ะ');
+  });
+
+  it('ignores spacing and punctuation differences but keeps short pieces', () => {
+    const reply = 'อุ๊ย! *She waves.* ไปกันเลย *อาเรียยิ้มกว้าง แล้วโบกมือให้อย่างร่าเริง*';
+    expect(dropRepeatedPieces(reply, [earlier])).toBe('อุ๊ย! *She waves.* ไปกันเลย');
+    expect(dropRepeatedPieces('ไปกันเลย วันนี้อากาศดีจังเลยนะคะ...', [earlier])).toBe('ไปกันเลย');
+  });
+
+  it('returns an empty string when everything repeats', () => {
+    expect(dropRepeatedPieces('วันนี้อากาศดีจังเลยนะคะ!', [earlier])).toBe('');
   });
 });

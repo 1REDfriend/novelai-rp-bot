@@ -86,6 +86,7 @@ describe('RoleplayService chat mode', () => {
     chatMaxOutputTokens: 1500,
     builderMaxOutputTokens: 3000,
     builderMaxContextTokens: 16000,
+    storyDirective: '',
   };
   const noCharacters = () => ({ characters: new Map(), errors: [] });
   const text = { complete: async (_r: CompletionRequest) => ({ text: 'unused', finishReason: 'stop' }) };
