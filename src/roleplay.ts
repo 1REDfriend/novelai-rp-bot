@@ -268,6 +268,14 @@ export class RoleplayService {
     return { character, messageId };
   }
 
+  /**
+   * Empties the history for /clear-all. Unlike reset, nothing is added back:
+   * the channel stays bound and the next message starts from a blank page.
+   */
+  clearHistory(channelId: string): void {
+    this.store.clear(channelId);
+  }
+
   /** In roleplay this replaces the Author's Note; in chat mode it adds to the system prompt. */
   setNote(channelId: string, note: string | null): void {
     this.requireBinding(channelId);

@@ -16,6 +16,8 @@ export const messages = {
     regen: "Regenerate the character's latest reply",
     undo: 'Remove the latest message pair from the history',
     reset: 'Clear this channel\'s history and start the story over',
+    clearAll: 'Delete every message in this channel and clear its history',
+    clearAllConfirm: 'Set to True to delete everything. This cannot be undone',
     note: "Change the Author's Note for this scene (in /chat: extra instructions)",
     noteText: "New Author's Note. Leave empty to restore the character's default",
     characters: 'List available characters',
@@ -30,6 +32,13 @@ export const messages = {
   chatStarted:
     'This channel is now an **assistant chat** (GLM-4.6, no character). Previous history was cleared. Just type to ask anything. Use `/start` to go back to roleplay.',
   chatReset: 'Chat history cleared. Ask anything.',
+  clearAllNotConfirmed: 'Nothing was deleted. Run `/clear-all confirm: True` to delete every message in this channel.',
+  clearAllWorking: 'Deleting every message in this channel...',
+  clearAllNoPermission:
+    'The bot needs the **Manage Messages** and **Read Message History** permissions in this channel to delete messages.',
+  clearAllDone: (deleted: number, skipped: number) =>
+    `Deleted ${deleted} message${deleted === 1 ? '' : 's'} and cleared the history.` +
+    (skipped ? ` ${skipped} could not be deleted.` : ''),
   builderStarted: (name: string | null, id: string | null) =>
     name && id
       ? `This channel is now a **character builder** editing **${name}** (\`${id}.yaml\`). Previous history was cleared. Tell me what to change; when the file looks right, use \`/save\`.`

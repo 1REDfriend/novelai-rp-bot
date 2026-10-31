@@ -3,18 +3,22 @@ import {
   type AutocompleteInteraction,
   type ChatInputCommandInteraction,
   Client,
+  DiscordAPIError,
   Events,
   GatewayIntentBits,
   GuildMember,
+  type GuildTextBasedChannel,
   type Message,
   MessageFlags,
   REST,
+  RESTJSONErrorCodes,
   Routes,
   type SendableChannels,
   EmbedBuilder,
 } from 'discord.js';
 import { NovelAIChatClient } from './chat.js';
 import { loadCharacters } from './characters.js';
+import { type ClearableChannel, type ClearResult, clearChannel } from './clearChannel.js';
 import { commandDefinitions } from './commands.js';
 import { loadConfig } from './config.js';
 import { HistoryStore } from './history.js';
@@ -71,6 +75,18 @@ async function deleteMessages(channel: SendableChannels, ids: string[]): Promise
   }
 }
 
+function discordClearable(channel: GuildTextBasedChannel): ClearableChannel {
+  return {
+    fetchPage: async (before) => [...(await channel.messages.fetch({ limit: 100, ...(before ? { before } : {}) })).values()],
+    bulkDelete: async (ids) => {
+      await channel.bulkDelete(ids);
+    },
+    deleteOne: async (id) => {
+      await channel.messages.delete(id);
+    },
+  };
+}
+
 async function sendableChannel(channelId: string): Promise<SendableChannels> {
   const channel = await client.channels.fetch(channelId);
   if (!channel?.isSendable()) throw new Error(`Channel ${channelId} is not a text channel the bot can send to`);
@@ -112,7 +128,8 @@ async function onCommand(interaction: ChatInputCommandInteraction): Promise<void
     return;
   }
 
-  const ephemeral = ['regen', 'undo'].includes(interaction.commandName);
+  // /clear-all answers privately so its own reply is not one of the messages being deleted.
+  const ephemeral = ['regen', 'undo', 'clear-all'].includes(interaction.commandName);
   await interaction.deferReply(ephemeral ? { flags: MessageFlags.Ephemeral } : {});
 
   await queue.run(channelId, async () => {
@@ -151,6 +168,28 @@ async function onCommand(interaction: ChatInputCommandInteraction): Promise<void
         }
         await interaction.editReply(messages.reset(character.name));
         service.attachDiscordIds(messageId, await sendChunks(channel, character.greeting));
+        break;
+      }
+      case 'clear-all': {
+        if (!interaction.options.getBoolean('confirm', true)) {
+          await interaction.editReply(messages.clearAllNotConfirmed);
+          break;
+        }
+        if (channel.isDMBased()) throw new Error('/clear-all only works in server channels');
+        await interaction.editReply(messages.clearAllWorking);
+        let result: ClearResult;
+        try {
+          result = await clearChannel(discordClearable(channel));
+        } catch (err) {
+          const denied = [RESTJSONErrorCodes.MissingPermissions, RESTJSONErrorCodes.MissingAccess];
+          if (err instanceof DiscordAPIError && denied.includes(err.code as RESTJSONErrorCodes)) {
+            await interaction.editReply(messages.clearAllNoPermission);
+            break;
+          }
+          throw err;
+        }
+        service.clearHistory(channelId);
+        await interaction.editReply(messages.clearAllDone(result.deleted, result.skipped));
         break;
       }
       case 'regen': {

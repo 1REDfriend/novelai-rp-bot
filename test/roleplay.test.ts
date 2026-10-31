@@ -234,3 +234,18 @@ describe('story directive and repeats', () => {
     expect((await service.reply('c1', 'Rowan', 'again')).text).toBe('The kettle whistles.');
   });
 });
+
+describe('RoleplayService.clearHistory', () => {
+  it('empties the history without adding the greeting back, and keeps the character', async () => {
+    service.start('c1', 'aria');
+    await service.reply('c1', 'Rowan', 'hi');
+    service.clearHistory('c1');
+    expect(store.getMessages('c1')).toEqual([]);
+    expect(service.isBound('c1')).toBe(true);
+
+    text.outputs.push(' Welcome back!');
+    await service.reply('c1', 'Rowan', 'hello again');
+    expect(text.requests.at(-1)!.prompt).not.toContain('hi\n');
+    expect(store.getMessages('c1').map((m) => m.role)).toEqual(['user', 'character']);
+  });
+});

@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { messages } from './messages.js';
 
 export const commandDefinitions = [
@@ -21,6 +21,12 @@ export const commandDefinitions = [
   new SlashCommandBuilder().setName('regen').setDescription(messages.commands.regen),
   new SlashCommandBuilder().setName('undo').setDescription(messages.commands.undo),
   new SlashCommandBuilder().setName('reset').setDescription(messages.commands.reset),
+  new SlashCommandBuilder()
+    .setName('clear-all')
+    .setDescription(messages.commands.clearAll)
+    // Deletes everyone's messages, so by default only members who could do that by hand see it.
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
+    .addBooleanOption((o) => o.setName('confirm').setDescription(messages.commands.clearAllConfirm).setRequired(true)),
   new SlashCommandBuilder()
     .setName('note')
     .setDescription(messages.commands.note)

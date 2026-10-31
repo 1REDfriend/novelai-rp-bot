@@ -82,6 +82,7 @@ npm run dev
 | `/regen` | Delete the character's last reply and write a new one |
 | `/undo` | Remove your last message and the character's reply from the history |
 | `/reset` | Clear this channel's history and start again from the greeting |
+| `/clear-all confirm: True` | Delete every message in this channel (everyone's, not only the bot's) and clear its history. The channel keeps its character, but the bot posts nothing new; the next message starts from a blank page. Messages older than 14 days are deleted one by one, so a long channel takes a while. Needs the **Manage Messages** permission for you and the bot, and **Read Message History** for the bot. Cannot be undone |
 | `/note <text>` | Temporarily replace the scene's Author's Note. `/note` with no text restores the default |
 | `/chat` | Turn this channel into a plain AI assistant chat with no character |
 | `/builder [character]` | Turn this channel into a character builder, for a new character or an existing one |
